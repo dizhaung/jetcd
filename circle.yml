@@ -7,6 +7,7 @@ machine:
 dependencies:
   cache_directories:
     - "~/docker"
+    - "~/.m2"
 
   override:
     - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
@@ -17,7 +18,7 @@ test:
     - curl --retry 10 --retry-delay 5 -v http://127.0.0.1:4001/version
     - mvn clean test
   post:
-    - if [[ ! -e ~/docker/image.tar ]]; then mkdir -p ~/docker; docker save etcd > ~/docker/image.tar; fi
+    - if [[ ! -e ~/docker/image.tar ]]; then mkdir -p ~/docker; docker save quay.io/coreos/etcd > ~/docker/image.tar; fi
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
     - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
     - mvn site -DartifactTargetPath=${CIRCLE_ARTIFACTS}

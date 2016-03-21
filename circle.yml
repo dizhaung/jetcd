@@ -1,7 +1,24 @@
+machine:
+  services:
+    - docker
+  java:
+    version: oraclejdk8
+
 dependencies:
-  pre:
-    - ./scripts/run_etcd.sh
+  cache_directories:
+    - "~/docker"
+    - "~/.m2"
+
+  override:
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
 
 test:
+  override:
+    - docker run -d -p 4001:4001 -p 2380:2380 -p 2379:2379 --name etcd quay.io/coreos/etcd:v2.0.3 -name etcd0 -advertise-client-urls http://127.0.0.1:2379,http://127.0.0.1:4001 -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 -initial-advertise-peer-urls http://127.0.0.1:2380 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster-1 -initial-cluster etcd0=http://127.0.0.1:2380 -initial-cluster-state new; sleep 10
+    - curl --retry 10 --retry-delay 5 -v http://127.0.0.1:4001/version
+    - mvn clean test
   post:
+    - if [[ ! -e ~/docker/image.tar ]]; then mkdir -p ~/docker; docker save quay.io/coreos/etcd > ~/docker/image.tar; fi
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
     - mvn site -DartifactTargetPath=${CIRCLE_ARTIFACTS}

@@ -1,8 +1,8 @@
-external/
 .project
 .classpath
 .settings
-/target
+target
 .idea
 *.iml
 atlassian-ide-plugin.xml
+pom.xml.versionsBackup
